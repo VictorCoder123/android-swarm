@@ -1,0 +1,16 @@
+doctype html
+html(lang='en')
+  head
+    include ../includes/head.jade
+    block extra-css
+    block extra-html
+  body
+    //include ../includes/header.jade
+    #main-container.container
+      //include ../includes/message.jade
+      block content
+    include ../includes/footer.jade
+    include ../includes/foot.jade
+    //.analytics
+      include ../includes/google-analytics.jade
+    block extra-js

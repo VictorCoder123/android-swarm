@@ -1,0 +1,13 @@
+{
+  "name": "android-swarm",
+  "version": "0.0.0",
+  "authors": [
+    "Qishen Zhang"
+  ],
+  "dependencies": {
+    "bootstrap-social": "latest",
+    "bootstrap": "latest",
+    "react" : "latest",
+    "react-router" : "latest"
+  }
+}

@@ -13,6 +13,7 @@ coverage
 
 # Dependency directory
 node_modules
+src/client/bower_components
 
 # Generated css
 public/styles/*.css

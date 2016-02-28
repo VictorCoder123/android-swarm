@@ -59,8 +59,8 @@ gulp.task('lint', function() {
 
 // Browserify all js modules into one file
 gulp.task('browserify', function () {
-  return browserify()
-    .transform('babelify', {presets: ["es2015", "react"], debug: true, entries: paths.entry})
+  return browserify(paths.entry)
+    .transform('babelify', {presets: ["es2015", "react"]})
     .bundle()
     .pipe(source('container.js'))
     //.pipe(uglify())

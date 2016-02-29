@@ -48,7 +48,36 @@ var ContainerList = React.createClass({
     this.loadAllContainers();
     setInterval(this.loadAllContainers, this.props.pollInterval);
   },
+  stopContainer: function stopContainer(containerID) {
+    $.ajax({
+      url: 'containers/' + containerID + '/stop',
+      dataType: 'json',
+      type: 'POST',
+      success: function (data) {
+        //this.setState({containers: data});
+        console.log(data);
+      }.bind(this),
+      error: function (xhr, status, err) {
+        console.error(status, err.toString());
+      }.bind(this)
+    });
+  },
+  createContainer: function createContainer() {
+    $.ajax({
+      url: 'containers/create',
+      dataType: 'json',
+      type: 'POST',
+      success: function (data) {
+        //this.setState({containers: data});
+        console.log(data);
+      }.bind(this),
+      error: function (xhr, status, err) {
+        console.error(status, err.toString());
+      }.bind(this)
+    });
+  },
   render: function render() {
+    var self = this;
     return React.createElement(
       'div',
       { className: 'DeviceList' },
@@ -59,7 +88,7 @@ var ContainerList = React.createClass({
       ),
       React.createElement(
         'button',
-        { className: 'btn btn-default btn-lg', type: 'button' },
+        { className: 'btn btn-default btn-lg', type: 'button', onClick: self.createContainer },
         'Add container'
       ),
       React.createElement(
@@ -85,7 +114,8 @@ var ContainerList = React.createClass({
               'th',
               null,
               'Status'
-            )
+            ),
+            React.createElement('th', null)
           )
         ),
         React.createElement(
@@ -98,7 +128,7 @@ var ContainerList = React.createClass({
               React.createElement(
                 'td',
                 null,
-                container.Id
+                container.Id.substr(0, 9)
               ),
               React.createElement(
                 'td',
@@ -109,6 +139,15 @@ var ContainerList = React.createClass({
                 'td',
                 null,
                 container.Status
+              ),
+              React.createElement(
+                'td',
+                null,
+                React.createElement(
+                  'button',
+                  { className: 'btn btn-danger btn-sm', type: 'button', onClick: self.stopContainer.bind(self, container.Id) },
+                  'Delete'
+                )
               )
             );
           })

@@ -41,16 +41,15 @@ RUN mkdir -p $JAVA_HOME \
     && update-alternatives --install "/usr/bin/javaws" "javaws" "$JAVA_HOME/bin/javaws" 1 \
     && update-alternatives --install "/usr/lib/firefox/browser/plugins/mozilla-javaplugin.so" "mozilla-javaplugin.so" "$JAVA_HOME/lib/amd64/libnpjp2.so" 1
 
-### Install chrome browser
-RUN apt-get install -y chromium-browser chromium-browser-l10n chromium-codecs-ffmpeg \
-    && ln -s /usr/bin/chromium-browser /usr/bin/google-chrome \
-    && echo "alias chromium-browser='/usr/bin/chromium-browser --user-data-dir'" >> /root/.bashrc
-
 # Setup specifics for android support - glx drivers etc.
 RUN apt-get install libgl1-mesa-dev -y
 RUN apt-get install libc6-i386 lib32stdc++6 lib32gcc1 lib32ncurses5 lib32z1 -y
 RUN apt-get install nano -y
 RUN apt-get install git -y
+
+# Install KVM dependencies for android acceleration and add user groups
+RUN apt-get install qemu-kvm libvirt-bin ubuntu-vm-builder bridge-utils -y
+RUN adduser `id -un` libvirtd
 
 # Install Android SDK
 RUN cd /root && wget -nv http://dl.google.com/android/android-sdk_r23.0.2-linux.tgz && tar xfo android-sdk_r23.0.2-linux.tgz --no-same-permissions && chmod -R a+rX android-sdk-linux
@@ -65,17 +64,15 @@ RUN echo y | android update sdk --filter tools --no-ui --force -a
 RUN echo y | android update sdk --filter platform-tools --no-ui --force -a
 RUN echo y | android update sdk --filter platform --no-ui --force -a
 RUN echo y | android update sdk --filter build-tools-21.0.1 --no-ui -a
-RUN echo y | android update sdk --filter sys-img-x86-android-21 --no-ui -a
-RUN echo y | android update sdk --filter sys-img-x86-android-22 --no-ui -a
 RUN echo y | android update sdk --filter sys-img-x86-android-23 --no-ui -a
 
 # Create and run android virtual device with latest android-23
-RUN android create avd -n myandroid -t 22
-RUN emulator -avd myandroid
+RUN echo n | android create avd -n myandroid -t android-23
+#RUN emulator64-x86 -avd myandroid -noaudio -no-window -gpu off -verbose -qemu -enable-kvm
 
 # Install Apk into AVD
 ADD apk /root/apk
-RUN adb -s myandroid install /root/apk/Lockito.apk
+#RUN adb -s myandroid install /root/apk/Lockito.apk
 
 # xvnc server porst, if $DISPLAY=:1 port will be 5901
 EXPOSE 5901

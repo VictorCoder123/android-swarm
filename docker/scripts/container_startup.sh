@@ -31,3 +31,6 @@ case $i in
     ;;
 esac
 done
+
+# Start Android Emulator inside container without GUI
+echo "no" | emulator64-x86 -avd myandroid-19 -noaudio -no-window -gpu off -verbose -qemu -enable-kvm

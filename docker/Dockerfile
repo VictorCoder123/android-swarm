@@ -1,14 +1,11 @@
 # This dockerfile will build an image that can run a full android emulator + the visual emulator over VNC.
-# This is maintained and intended to be run in AWS Docker instances with ECS support.
-# Based on the work by https://github.com/ConSol/docker-headless-vnc-container
+# Based on the work by https://github.com/ConSol/docker-headless-vnc-container.
+# KVM needs to be enabled by setting BIOS virtualization options, otherwise emulator will be slow.
+# Run `sudo apt-get install cpu-checker && kvm-ok` to check if KVM is enabled under current machine
 
 FROM ubuntu:14.04
 
 MAINTAINER Qishen Zhang "privatebiktop@gmail.com"
-ENV REFRESHED_AT 2015-12-02
-
-ENV JAVA_VERSION 8u65
-ENV JAVA_HOME /usr/lib/jvm/java-$JAVA_VERSION
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV DISPLAY :1
@@ -16,40 +13,35 @@ ENV NO_VNC_HOME /root/noVNC
 ENV VNC_COL_DEPTH 24
 ENV VNC_RESOLUTION 1280x1024
 ENV VNC_PW vncpassword
+ENV JAVA_HOME /usr/lib/jvm/java-7-oracle
 
-ENV SAKULI_DOWNLOAD_URL https://labs.consol.de/sakuli/install
+# Install core dependencies
+RUN apt-get update && apt-get upgrade -y
+RUN apt-get install -y supervisor vim xfce4 vnc4server wget unzip nano git
 
-############### add linux-mint dependicies and update packages
-RUN apt-key adv --recv-key --keyserver keyserver.ubuntu.com "3EE67F3D0FF405B2"
-RUN echo "deb http://packages.linuxmint.com/ rafaela main upstream import" >> /etc/apt/sources.list.d/mint.list \
-    && echo "deb http://extra.linuxmint.com/ rafaela main " >> /etc/apt/sources.list.d/mint.list
-
-############### xvnc / xfce installation
-RUN apt-get update && apt-get upgrade -y && apt-get install -y supervisor vim xfce4 vnc4server wget unzip firefox
-### Install noVNC - HTML5 based VNC viewer
+# Install noVNC - HTML5 based VNC viewer
 RUN mkdir -p $NO_VNC_HOME/utils/websockify \
     && wget -qO- https://github.com/kanaka/noVNC/archive/master.tar.gz | tar xz --strip 1 -C $NO_VNC_HOME \
     &&  wget -qO- https://github.com/kanaka/websockify/archive/v0.7.0.tar.gz | tar xz --strip 1 -C $NO_VNC_HOME/utils/websockify \
     && chmod +x -v /root/noVNC/utils/*.sh
 
-##### Add Oracle JAVA JRE8
-RUN mkdir -p $JAVA_HOME \
-    # download and extract
-    && wget -qO- $SAKULI_DOWNLOAD_URL/3rd-party/java/jre-$JAVA_VERSION-linux-x64.tar.gz | tar xz --strip 1 -C $JAVA_HOME \
-    # set alternatives
-    && update-alternatives --install "/usr/bin/java" "java" "$JAVA_HOME/bin/java" 1 \
-    && update-alternatives --install "/usr/bin/javaws" "javaws" "$JAVA_HOME/bin/javaws" 1 \
-    && update-alternatives --install "/usr/lib/firefox/browser/plugins/mozilla-javaplugin.so" "mozilla-javaplugin.so" "$JAVA_HOME/lib/amd64/libnpjp2.so" 1
-
-# Setup specifics for android support - glx drivers etc.
-RUN apt-get install libgl1-mesa-dev -y
-RUN apt-get install libc6-i386 lib32stdc++6 lib32gcc1 lib32ncurses5 lib32z1 -y
-RUN apt-get install nano -y
-RUN apt-get install git -y
+# Install Java 7
+RUN sudo apt-get install -y software-properties-common python3-software-properties
+RUN echo oracle-java7-installer shared/accepted-oracle-license-v1-1 select true | debconf-set-selections && add-apt-repository -y ppa:webupd8team/java
+RUN apt-get update
+RUN apt-get install -y oracle-java7-installer
+RUN rm -rf /var/lib/apt/lists/* && rm -rf /var/cache/oracle-jdk7-installer
 
 # Install KVM dependencies for android acceleration and add user groups
+RUN apt-get update
 RUN apt-get install qemu-kvm libvirt-bin ubuntu-vm-builder bridge-utils -y
 RUN adduser `id -un` libvirtd
+RUN adduser `id -un` kvm
+RUN service libvirt-bin start
+
+# Setup specifics for android support - glx drivers etc. Otherwise adb: Not found
+RUN apt-get install libgl1-mesa-dev -y
+RUN apt-get install libc6-i386 lib32stdc++6 lib32gcc1 lib32ncurses5 lib32z1 -y
 
 # Install Android SDK
 RUN cd /root && wget -nv http://dl.google.com/android/android-sdk_r23.0.2-linux.tgz && tar xfo android-sdk_r23.0.2-linux.tgz --no-same-permissions && chmod -R a+rX android-sdk-linux
@@ -64,11 +56,16 @@ RUN echo y | android update sdk --filter tools --no-ui --force -a
 RUN echo y | android update sdk --filter platform-tools --no-ui --force -a
 RUN echo y | android update sdk --filter platform --no-ui --force -a
 RUN echo y | android update sdk --filter build-tools-21.0.1 --no-ui -a
-RUN echo y | android update sdk --filter sys-img-x86-android-23 --no-ui -a
 
-# Create and run android virtual device with latest android-23
-RUN echo n | android create avd -n myandroid -t android-23
-#RUN emulator64-x86 -avd myandroid -noaudio -no-window -gpu off -verbose -qemu -enable-kvm
+# Install android images
+RUN echo y | android update sdk --filter sys-img-x86-android-19 --no-ui -a
+
+# Create and run android virtual device
+RUN echo n | android create avd -n myandroid-19 -t android-19
+
+# Update ADB and start adb server
+RUN echo y | android update adb
+RUN adb start-server
 
 # Install Apk into AVD
 ADD apk /root/apk
@@ -79,10 +76,18 @@ EXPOSE 5901
 # novnc web port
 EXPOSE 6901
 
+# Import external files with excuteable permission
 ADD .vnc /root/.vnc
 ADD .config /root/.config
 ADD Desktop /root/Desktop
 ADD scripts /root/scripts
 RUN chmod +x /root/.vnc/xstartup /etc/X11/xinit/xinitrc /root/scripts/*.sh /root/Desktop/*.desktop
 
-CMD ["/root/scripts/vnc_startup.sh", "--tail-log"]
+# Add entry point
+CMD ["/root/scripts/container_startup.sh", "--tail-log"]
+
+
+
+
+
+

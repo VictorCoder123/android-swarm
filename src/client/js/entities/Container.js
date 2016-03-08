@@ -41,7 +41,7 @@ var ContainerList = React.createClass({
   },
   stopContainer: function(containerID) {
     $.ajax({
-      url: 'containers/' + containerID + '/stop',
+      url: '/containers/' + containerID + '/stop',
       dataType: 'json',
       type: 'POST',
       success: function(data) {
@@ -55,7 +55,7 @@ var ContainerList = React.createClass({
   },
   createContainer: function() {
     $.ajax({
-      url: 'containers/create',
+      url: '/containers/create',
       dataType: 'json',
       type: 'POST',
       success: function(data) {

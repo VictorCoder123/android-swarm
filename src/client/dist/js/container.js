@@ -50,7 +50,7 @@ var ContainerList = React.createClass({
   },
   stopContainer: function stopContainer(containerID) {
     $.ajax({
-      url: 'containers/' + containerID + '/stop',
+      url: '/containers/' + containerID + '/stop',
       dataType: 'json',
       type: 'POST',
       success: function (data) {
@@ -64,7 +64,7 @@ var ContainerList = React.createClass({
   },
   createContainer: function createContainer() {
     $.ajax({
-      url: 'containers/create',
+      url: '/containers/create',
       dataType: 'json',
       type: 'POST',
       success: function (data) {
@@ -169,6 +169,6 @@ var Container = require('../entities/Container');
 var ContainerList = Container.ContainerList;
 var ContainerDetail = Container.ContainerDetail;
 
-ReactDOM.render(React.createElement(ContainerList, { url: 'containers/json', pollInterval: 2000 }), document.getElementById('content'));
+ReactDOM.render(React.createElement(ContainerList, { url: '/containers/json', pollInterval: 2000 }), document.getElementById('content'));
 
 },{"../entities/Container":1}]},{},[2]);

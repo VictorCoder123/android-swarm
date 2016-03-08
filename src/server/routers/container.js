@@ -101,6 +101,7 @@ containerRouter.post('/create', function(req, res){
         },
         HostConfig: {
           PortBindings: { "6901/tcp": [{ "HostPort": port.toString() }] },
+          Privileged: true
         }
       };
       docker.createContainer(opts, function(err, newContainer){

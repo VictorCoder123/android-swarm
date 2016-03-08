@@ -65,7 +65,7 @@ RUN echo n | android create avd -n myandroid-19 -t android-19
 
 # Update ADB and start adb server
 RUN echo y | android update adb
-RUN adb start-server
+#RUN adb start-server
 
 # Install Apk into AVD
 ADD apk /root/apk

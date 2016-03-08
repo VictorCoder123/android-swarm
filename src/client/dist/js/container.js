@@ -62,6 +62,20 @@ var ContainerList = React.createClass({
       }.bind(this)
     });
   },
+  removeContainer: function removeContainer(containerID) {
+    $.ajax({
+      url: '/containers/' + containerID + '/remove',
+      dataType: 'json',
+      type: 'POST',
+      success: function (data) {
+        //this.setState({containers: data});
+        console.log(data);
+      }.bind(this),
+      error: function (xhr, status, err) {
+        console.error(status, err.toString());
+      }.bind(this)
+    });
+  },
   createContainer: function createContainer() {
     $.ajax({
       url: '/containers/create',
@@ -145,7 +159,7 @@ var ContainerList = React.createClass({
                 null,
                 React.createElement(
                   'button',
-                  { className: 'btn btn-danger btn-sm', type: 'button', onClick: self.stopContainer.bind(self, container.Id) },
+                  { className: 'btn btn-danger btn-sm', type: 'button', onClick: self.removeContainer.bind(self, container.Id) },
                   'Delete'
                 )
               )

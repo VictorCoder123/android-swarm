@@ -41,6 +41,15 @@ public class MockLocationService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
+        if(intent == null || intent.getAction() == null) return mBinder;
+        else if(intent.getAction().equals(START_MOCK_CMD)){
+            Log.i(TAG, "Start command");
+            startMock();
+        }
+        else if(intent.getAction().equals(STOP_MOCK_CMD)){
+            Log.i(TAG, "Stop command");
+            stopMock();
+        }
         return mBinder;
     }
 
@@ -62,13 +71,14 @@ public class MockLocationService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId){
         if(intent == null || intent.getAction() == null) return START_STICKY;
         else if(intent.getAction().equals(START_MOCK_CMD)){
-            Log.d(TAG, "Start command");
+            Log.i(TAG, "Start command");
             startMock();
         }
         else if(intent.getAction().equals(STOP_MOCK_CMD)){
-            Log.d(TAG, "Stop command");
+            Log.i(TAG, "Stop command");
             stopMock();
         }
+        //Log.d(TAG, "Service is started :)");
 
         return START_STICKY;
     }
@@ -98,7 +108,7 @@ public class MockLocationService extends Service {
                 .setTicker(title)
                 .setWhen(System.currentTimeMillis())
                 .setContentTitle(title)
-                .setContentText(message)
+                .setContentText(content)
                 .build();
         mNM.notify(NOTIFICATION, notification);
     }

@@ -19,6 +19,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
+import android.util.Log;
 
 import me.qishen.mockgps.BuildConfig;
 import me.qishen.mockgps.R;
@@ -41,6 +42,8 @@ public class MainFragment extends Fragment {
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
+
+    private static final String TAG = "MainFragment";
 
     MockLocationService mService;
     boolean mBound;
@@ -96,6 +99,7 @@ public class MainFragment extends Fragment {
             Intent intent = new Intent(mContext, MockLocationService.class);
             intent.setAction(MockLocationService.START_MOCK_CMD);
             mContext.bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+            //Log.d(TAG, "Service is started :)");
         }
     }
 
@@ -127,9 +131,12 @@ public class MainFragment extends Fragment {
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 int res = mContext.checkCallingOrSelfPermission("android.permission.ACCESS_COARSE_LOCATION");
-                if (textView != null && res == PackageManager.PERMISSION_GRANTED) {
-                    Location loc = locationManager.getLastKnownLocation("gps");
+                Location loc = locationManager.getLastKnownLocation("gps");
+                if (res == PackageManager.PERMISSION_GRANTED && loc != null) {
                     textView.setText(loc.toString());
+                }
+                else{
+                    textView.setText("No location information available now.");
                 }
             }
         });

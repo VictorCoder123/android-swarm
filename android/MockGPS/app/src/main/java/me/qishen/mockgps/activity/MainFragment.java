@@ -21,6 +21,8 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.util.Log;
 
+import java.util.jar.Manifest;
+
 import me.qishen.mockgps.BuildConfig;
 import me.qishen.mockgps.R;
 import me.qishen.mockgps.service.MockLocationService;
@@ -130,12 +132,14 @@ public class MainFragment extends Fragment {
         Button button = (Button) view.findViewById(R.id.button);
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                int res = mContext.checkCallingOrSelfPermission("android.permission.ACCESS_COARSE_LOCATION");
+                // TODO: Special permission check for sdk >= 23
+                int code = PackageManager.PERMISSION_GRANTED;
+                int res_coarse = mContext.checkCallingOrSelfPermission("android.permission.ACCESS_COARSE_LOCATION");
+                int res_fine = mContext.checkCallingOrSelfPermission("android.permission.ACCESS_FINE_LOCATION");
                 Location loc = locationManager.getLastKnownLocation("gps");
-                if (res == PackageManager.PERMISSION_GRANTED && loc != null) {
+                if (res_coarse == code && res_fine == code && loc != null) {
                     textView.setText(loc.toString());
-                }
-                else{
+                } else {
                     textView.setText("No location information available now.");
                 }
             }

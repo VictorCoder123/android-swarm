@@ -105,6 +105,7 @@ public class MockLocationService extends Service {
         CharSequence title = getText(NOTIFICATION);
         CharSequence content = message;
         Notification notification = new Notification.Builder(this)
+                .setSmallIcon(R.drawable.filter)
                 .setTicker(title)
                 .setWhen(System.currentTimeMillis())
                 .setContentTitle(title)

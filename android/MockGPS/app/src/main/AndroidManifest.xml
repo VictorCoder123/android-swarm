@@ -12,7 +12,6 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-
         <activity
             android:name=".activity.MockGPSActivity"
             android:label="@string/app_name"
@@ -27,9 +26,16 @@
         <service
             android:name=".service.MockLocationService"
             android:enabled="true"
-            android:exported="true">
-        </service>
+            android:exported="true" />
 
+        <activity
+            android:name=".activity.ActionBarCastActivity"
+            android:label="@string/title_activity_action_bar_cast"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".activity.ToolbarDrawerActivity"
+            android:label="@string/title_activity_toolbar_drawer"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>
 
 </manifest>

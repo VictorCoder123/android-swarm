@@ -19,9 +19,19 @@ import android.view.MenuItem;
 import me.qishen.mockgps.R;
 import me.qishen.mockgps.utils.LogHelper;
 
-public class ToolbarDrawerActivity extends AppCompatActivity
+/**
+ * Abstract activity with toolbar, navigation drawer and cast support. Needs to be extended by
+ * any activity that wants to be shown as a top level activity.
+ *
+ * The requirements for a subclass is to call {@link #initializeToolbar()} on onCreate, after
+ * setContentView() is called and have three mandatory layout elements:
+ * a {@link android.support.v7.widget.Toolbar} with id 'toolbar',
+ * a {@link android.support.v4.widget.DrawerLayout} with id 'drawerLayout' and
+ * a {@link android.widget.ListView} with id 'drawerList'.
+ */
+public abstract class ToolbarDrawerActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
-    private static final String TAG = LogHelper.makeLogTag(ActionBarCastActivity.class);
+    private static final String TAG = LogHelper.makeLogTag(ToolbarDrawerActivity.class);
     private static final int DELAY_MILLIS = 1000;
 
     private MenuItem mMediaRouteMenuItem;
@@ -30,7 +40,6 @@ public class ToolbarDrawerActivity extends AppCompatActivity
     private DrawerLayout mDrawerLayout;
 
     private boolean mToolbarInitialized;
-
     private int mItemToOpenWhenDrawerCloses = -1;
 
     private final DrawerLayout.DrawerListener mDrawerListener = new DrawerLayout.DrawerListener() {
@@ -39,12 +48,12 @@ public class ToolbarDrawerActivity extends AppCompatActivity
             if (mDrawerToggle != null) mDrawerToggle.onDrawerClosed(drawerView);
             if (mItemToOpenWhenDrawerCloses >= 0) {
                 Bundle extras = ActivityOptions.makeCustomAnimation(
-                        ActionBarCastActivity.this, R.anim.fade_in, R.anim.fade_out).toBundle();
+                        ToolbarDrawerActivity.this, R.anim.fade_in, R.anim.fade_out).toBundle();
 
                 Class activityClass = null;
 
                 if (activityClass != null) {
-                    startActivity(new Intent(ActionBarCastActivity.this, activityClass), extras);
+                    startActivity(new Intent(ToolbarDrawerActivity.this, activityClass), extras);
                     finish();
                 }
             }
@@ -74,14 +83,44 @@ public class ToolbarDrawerActivity extends AppCompatActivity
                 public void onBackStackChanged() {
                     updateDrawerToggle();
                 }
-            }
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_toolbar_drawer);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+            };
 
+    /**
+     * Call this method after setContentView in overridden method onCreate()
+     * to initialize toolbar and drawer
+     */
+    protected void initializeToolbar() {
+        // Create Toolbar by finding its ID
+        mToolbar = (Toolbar) findViewById(R.id.toolbar);
+        if (mToolbar == null) {
+            throw new IllegalStateException("Layout is required to include a Toolbar with id " +
+                    "'toolbar'");
+        }
+        mToolbar.inflateMenu(R.menu.menu_mock_gps);
+
+        // Create Drawer with toggle
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        if (mDrawerLayout != null) {
+            NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+            if (navigationView == null) {
+                throw new IllegalStateException("Layout requires a NavigationView " +
+                        "with id 'nav_view'");
+            }
+
+            // Create an ActionBarDrawerToggle that will handle opening/closing of the drawer:
+            mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout,
+                    mToolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+            mDrawerLayout.setDrawerListener(mDrawerListener);
+            populateDrawerItems(navigationView);
+            setSupportActionBar(mToolbar);
+            updateDrawerToggle();
+        } else {
+            setSupportActionBar(mToolbar);
+        }
+
+        mToolbarInitialized = true;
+
+        // Add FloatAction Button
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -90,23 +129,52 @@ public class ToolbarDrawerActivity extends AppCompatActivity
                         .setAction("Action", null).show();
             }
         });
+    }
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.setDrawerListener(toggle);
-        toggle.syncState();
+    private void populateDrawerItems(NavigationView navigationView) {
+        navigationView.setNavigationItemSelectedListener(
+                new NavigationView.OnNavigationItemSelectedListener() {
+                    @Override
+                    public boolean onNavigationItemSelected(MenuItem menuItem) {
+                        menuItem.setChecked(true);
+                        mItemToOpenWhenDrawerCloses = menuItem.getItemId();
+                        mDrawerLayout.closeDrawers();
+                        return true;
+                    }
+                });
+        /*if (MusicPlayerActivity.class.isAssignableFrom(getClass())) {
+            navigationView.setCheckedItem(R.id.navigation_allmusic);
+        } else if (PlaceholderActivity.class.isAssignableFrom(getClass())) {
+            navigationView.setCheckedItem(R.id.navigation_playlists);
+        }*/
+    }
 
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        LogHelper.d(TAG, "Activity onCreate");
+
+        //setContentView(R.layout.activity_mock_gps);
+        //initializeToolbar();
+
+        /*
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
+        navigationView.setNavigationItemSelectedListener(this);*/
     }
 
     @Override
     public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        if (drawer.isDrawerOpen(GravityCompat.START)) {
-            drawer.closeDrawer(GravityCompat.START);
+        // If the drawer is open, back will close it
+        if (mDrawerLayout != null && mDrawerLayout.isDrawerOpen(GravityCompat.START)) {
+            mDrawerLayout.closeDrawers();
+            return;
+        }
+        // Otherwise, it may return to the previous fragment stack
+        FragmentManager fragmentManager = getFragmentManager();
+        if (fragmentManager.getBackStackEntryCount() > 0) {
+            fragmentManager.popBackStack();
         } else {
+            // Lastly, it will rely on the system behavior for back
             super.onBackPressed();
         }
     }
@@ -114,7 +182,7 @@ public class ToolbarDrawerActivity extends AppCompatActivity
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.toolbar_drawer, menu);
+        getMenuInflater().inflate(R.menu.menu_mock_gps, menu);
         return true;
     }
 
@@ -128,6 +196,9 @@ public class ToolbarDrawerActivity extends AppCompatActivity
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             return true;
+        }
+        else if(id == android.R.id.home){
+            mDrawerLayout.openDrawer(GravityCompat.START);
         }
 
         return super.onOptionsItemSelected(item);
@@ -156,5 +227,22 @@ public class ToolbarDrawerActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    protected void updateDrawerToggle() {
+        if (mDrawerToggle == null) {
+            return;
+        }
+        boolean isRoot = getFragmentManager().getBackStackEntryCount() == 0;
+        mDrawerToggle.setDrawerIndicatorEnabled(isRoot);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayShowHomeEnabled(!isRoot);
+            getSupportActionBar().setDisplayHomeAsUpEnabled(!isRoot);
+            getSupportActionBar().setHomeButtonEnabled(!isRoot);
+        }
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        if (isRoot) {
+            mDrawerToggle.syncState();
+        }
     }
 }

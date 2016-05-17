@@ -111,6 +111,9 @@ public abstract class ToolbarDrawerActivity extends AppCompatActivity
             mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout,
                     mToolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
             mDrawerLayout.setDrawerListener(mDrawerListener);
+
+            // Set listener for items in navigationView and override it in subclass to
+            // customize its listener for each item
             populateDrawerItems(navigationView);
             setSupportActionBar(mToolbar);
             updateDrawerToggle();
@@ -131,32 +134,26 @@ public abstract class ToolbarDrawerActivity extends AppCompatActivity
         });
     }
 
-    private void populateDrawerItems(NavigationView navigationView) {
+    /**
+     * Create listener to items on navigation view when item is selected
+     * and set it as default listener for current navigationView. This method
+     * needs to be overwritten in subclass to add customized actions.
+     * @param navigationView
+     */
+    protected void populateDrawerItems(NavigationView navigationView) {
         navigationView.setNavigationItemSelectedListener(
-                new NavigationView.OnNavigationItemSelectedListener() {
-                    @Override
-                    public boolean onNavigationItemSelected(MenuItem menuItem) {
-                        menuItem.setChecked(true);
-                        mItemToOpenWhenDrawerCloses = menuItem.getItemId();
-                        mDrawerLayout.closeDrawers();
-                        return true;
-                    }
-                });
-        /*if (MusicPlayerActivity.class.isAssignableFrom(getClass())) {
-            navigationView.setCheckedItem(R.id.navigation_allmusic);
-        } else if (PlaceholderActivity.class.isAssignableFrom(getClass())) {
-            navigationView.setCheckedItem(R.id.navigation_playlists);
-        }*/
+            new NavigationView.OnNavigationItemSelectedListener() {
+                @Override
+                public boolean onNavigationItemSelected(MenuItem menuItem) {
+                    return true;
+                }
+            });
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         LogHelper.d(TAG, "Activity onCreate");
-
-        //setContentView(R.layout.activity_mock_gps);
-        //initializeToolbar();
-
         /*
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);*/
@@ -200,29 +197,13 @@ public abstract class ToolbarDrawerActivity extends AppCompatActivity
         else if(id == android.R.id.home){
             mDrawerLayout.openDrawer(GravityCompat.START);
         }
-
         return super.onOptionsItemSelected(item);
     }
 
-    @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
-
-        if (id == R.id.nav_camera) {
-            // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
-
-        } else if (id == R.id.nav_slideshow) {
-
-        } else if (id == R.id.nav_manage) {
-
-        } else if (id == R.id.nav_share) {
-
-        } else if (id == R.id.nav_send) {
-
-        }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);

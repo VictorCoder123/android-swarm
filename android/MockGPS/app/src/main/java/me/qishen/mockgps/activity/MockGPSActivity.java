@@ -24,10 +24,11 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 import me.qishen.mockgps.R;
 import me.qishen.mockgps.utils.LogHelper;
-import me.qishen.mockgps.activity.SettingFragment.OnFragmentInteractionListener;
+import me.qishen.mockgps.activity.SettingFragment.OnSettingFragmentInteractionListener;
+import me.qishen.mockgps.activity.LocationListFragment.OnLLFragmentInteractionListener;
 
 public class MockGPSActivity extends ToolbarDrawerActivity
-        implements OnMapReadyCallback, OnFragmentInteractionListener{
+        implements OnMapReadyCallback, OnSettingFragmentInteractionListener, OnLLFragmentInteractionListener{
 
     private static final String TAG = LogHelper.makeLogTag(MockGPSActivity.class);
     LocationManager locationManager;
@@ -47,8 +48,10 @@ public class MockGPSActivity extends ToolbarDrawerActivity
                 SettingFragment settingFragment = SettingFragment.newInstance("Hello", "World");
                 switchFragment(settingFragment);
             } else if (id == R.id.nav_show) {
-
+                LocationListFragment locationListFragment = LocationListFragment.newInstance();
+                switchFragment(locationListFragment);
             }
+            // Close drawer after switching fragment.
             DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
             drawer.closeDrawer(GravityCompat.START);
             return true;
@@ -68,8 +71,13 @@ public class MockGPSActivity extends ToolbarDrawerActivity
     }
 
     @Override
-    public void onFragmentInteraction(Uri uri){
+    public void onSettingFragmentInteraction(Uri uri){
         return;
+    }
+
+    @Override
+    public void onLLFragmentInteraction(Uri uri){
+
     }
 
     @Override

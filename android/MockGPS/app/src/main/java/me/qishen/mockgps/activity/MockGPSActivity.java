@@ -1,10 +1,13 @@
 package me.qishen.mockgps.activity;
 
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -23,12 +26,14 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 
 import me.qishen.mockgps.R;
+import me.qishen.mockgps.service.MockLocationService;
 import me.qishen.mockgps.utils.LogHelper;
 import me.qishen.mockgps.activity.SettingFragment.OnSettingFragmentInteractionListener;
 import me.qishen.mockgps.activity.LocationListFragment.OnLLFragmentInteractionListener;
 
 public class MockGPSActivity extends ToolbarDrawerActivity
-        implements OnMapReadyCallback, OnSettingFragmentInteractionListener, OnLLFragmentInteractionListener{
+        implements OnMapReadyCallback, OnSettingFragmentInteractionListener,
+        OnLLFragmentInteractionListener, ActivityCompat.OnRequestPermissionsResultCallback{
 
     private static final String TAG = LogHelper.makeLogTag(MockGPSActivity.class);
     LocationManager locationManager;
@@ -87,6 +92,12 @@ public class MockGPSActivity extends ToolbarDrawerActivity
         initializeToolbar();
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
+        // Start mock location service
+        Intent intent = new Intent(this, MockLocationService.class);
+        intent.setAction(MockLocationService.START_MOCK_CMD);
+        startService(intent);
+        LogHelper.i(TAG, "Start MockLocation Service.");
+
         // Default map fragment to be rendered in main content container.
         SupportMapFragment mapFragment = SupportMapFragment.newInstance();
         mapFragment.getMapAsync(this);
@@ -136,5 +147,16 @@ public class MockGPSActivity extends ToolbarDrawerActivity
                 LogHelper.i(TAG, latLng.toString());
             }
         });
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        switch (requestCode) {
+            case 200: {
+                if(grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    LogHelper.i(TAG, "Location Permission Granted.");
+                }
+            }
+        }
     }
 }

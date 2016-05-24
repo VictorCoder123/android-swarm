@@ -22,9 +22,7 @@ public class MockLocationService extends Service {
     private NotificationManager mNM;
     private UpdateGPSThread mockThread = null;
 
-    public MockLocationService() {
-
-    }
+    public MockLocationService() {}
 
     /**
      * Class for clients to access.  Because we know this service always

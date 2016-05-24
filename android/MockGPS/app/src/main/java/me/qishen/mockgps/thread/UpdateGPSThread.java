@@ -1,5 +1,7 @@
 package me.qishen.mockgps.thread;
 
+import java.util.Date;
+
 import android.content.Context;
 import android.location.Location;
 import android.location.LocationManager;
@@ -25,13 +27,14 @@ public class UpdateGPSThread extends Thread {
         while(!stopped) {
             // Create random location
             double latitude = (Math.random() - 0.5) * 180;
-            double longitude = (Math.random() -0.5) * 360;
+            double longitude = (Math.random() - 0.5) * 360;
+            long date = new Date().getTime();
             currentLocation = new Location("gps");
             currentLocation.setLongitude(longitude);
             currentLocation.setLatitude(latitude);
             currentLocation.setAccuracy((float) Math.random());
-            currentLocation.setTime(1000);
-            currentLocation.setElapsedRealtimeNanos(1000);
+            currentLocation.setTime(date);
+            currentLocation.setElapsedRealtimeNanos(date);
 
             // Update location and send notification
             locationManager.setTestProviderLocation("gps", currentLocation);

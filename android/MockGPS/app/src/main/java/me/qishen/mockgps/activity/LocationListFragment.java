@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.LinkedList;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Criteria;
@@ -27,6 +28,8 @@ import android.widget.Toast;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.google.android.gms.location.LocationServices;
+
 import me.qishen.mockgps.R;
 import me.qishen.mockgps.utils.LogHelper;
 
@@ -42,27 +45,28 @@ public class LocationListFragment extends ListFragment {
     private OnLLFragmentInteractionListener mListener;
     private LocationManager locationManager;
     private MultiLineLocationArrayAdapter adapter;
-    private List<Location> locations = new LinkedList<>();
+    private MockGPSActivity mActivity;
+
+    // Define a listener that responds to location updates
+    private final LocationListener locationListener = new LocationListener() {
+        @Override
+        public void onLocationChanged(Location location) {
+            updateLocationList(location);
+        }
+
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras) {}
+
+        @Override
+        public void onProviderEnabled(String provider) {}
+
+        @Override
+        public void onProviderDisabled(String provider) {}
+    };
 
     public LocationListFragment() {
         // Required empty public constructor
     }
-
-    // Define a listener that responds to location updates
-    LocationListener locationListener = new LocationListener() {
-        public void onLocationChanged(Location location) {
-            // Called when a new location is found by the network location provider.
-            makeToast(location.toString());
-            updateLocationList(location);
-        }
-
-        public void onStatusChanged(String provider, int status, Bundle extras) {}
-
-        public void onProviderEnabled(String provider) {}
-
-        public void onProviderDisabled(String provider) {}
-    };
-
 
     /**
      * Use this factory method to create a new instance of
@@ -93,7 +97,10 @@ public class LocationListFragment extends ListFragment {
      * @param location
      */
     public void updateLocationList(Location location){
-        locations.add(location);
+        // Set maximum limit for the size of location list.
+        if(mActivity.locations.size() > 10)
+            mActivity.locations.remove(mActivity.locations.size()-1);
+        mActivity.locations.add(0, location);
         adapter.notifyDataSetChanged();
     }
 
@@ -101,12 +108,13 @@ public class LocationListFragment extends ListFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mActivity = (MockGPSActivity) getActivity();
 
         // Set up ListView Adapter for location.
-        adapter = new MultiLineLocationArrayAdapter(getActivity(), locations);
+        adapter = new MultiLineLocationArrayAdapter(mActivity, mActivity.locations);
         setListAdapter(adapter);
 
-        locationManager = (LocationManager)getActivity().getSystemService(Context.LOCATION_SERVICE);
+        locationManager = (LocationManager) mActivity.getSystemService(Context.LOCATION_SERVICE);
 
         // Getting the name of the provider that meets the criteria
         Criteria criteria = new Criteria();
@@ -121,14 +129,14 @@ public class LocationListFragment extends ListFragment {
                 // Get the last known location from the given provider
                 Location location = locationManager.getLastKnownLocation(provider);
 
-                locationManager.requestLocationUpdates(provider, 5000, 0, locationListener);
+                locationManager.requestLocationUpdates(provider, 100, 0, locationListener);
 
                 if(location != null) updateLocationList(location);
                 else makeToast("Location can't be retrieved.");
             }
             else {
                 // Ask for location permission at runtime
-                ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 200);
+                ActivityCompat.requestPermissions(mActivity, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 200);
             }
         }
     }
@@ -176,7 +184,6 @@ public class LocationListFragment extends ListFragment {
                 item + " selected", Toast.LENGTH_LONG).show();
     }
 
-
     /**
      * This interface must be implemented by activities that contain this
      * fragment to allow an interaction in this fragment to be communicated
@@ -207,6 +214,7 @@ public class LocationListFragment extends ListFragment {
         public View getView(int position, View convertView, ViewGroup parent) {
             LayoutInflater inflater = (LayoutInflater) context
                     .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            Location loc = locations.get(position);
             View rowView = inflater.inflate(R.layout.row_layout, parent, false);
             TextView firstLineView = (TextView) rowView.findViewById(R.id.firstLine);
             TextView secondLineView = (TextView) rowView.findViewById(R.id.secondLine);
@@ -214,9 +222,11 @@ public class LocationListFragment extends ListFragment {
 
             imageView.setImageResource(R.mipmap.ic_launcher);
             // Show location information on first line.
-            firstLineView.setText(locations.get(position).toString());
+            String locStr = "Latitude: " + Math.round(loc.getLatitude())
+                          + " Longitude: " + Math.round(loc.getLongitude());
+            firstLineView.setText(locStr);
             // Show obtained time of current location.
-            Date date = new Date(locations.get(position).getTime());
+            Date date = new Date(loc.getTime());
             secondLineView.setText(date.toString());
 
             return rowView;

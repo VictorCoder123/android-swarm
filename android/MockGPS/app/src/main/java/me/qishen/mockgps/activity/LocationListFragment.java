@@ -1,5 +1,6 @@
 package me.qishen.mockgps.activity;
 
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.Date;
 import java.util.Queue;
 import java.util.List;
